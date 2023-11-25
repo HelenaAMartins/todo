@@ -8,6 +8,7 @@ import Toggle from "./components/Toggle";
 import Pagination from "./components/Pagination";
 import { useQuery } from "react-query";
 import { texts } from "./utils";
+import ErrorSnackBar from "./components/errorSnackBar";
 
 // const fetchItems = async () => {
 //   const response = await fetch("https://apps.nicklima.com.br/todo/read");
@@ -21,6 +22,7 @@ function App() {
   const [textInput, setTextInput] = useState("");
   const [isChecked, setIsChecked] = useState(false);
   const [filteredArray, setFilteredArray] = useState([]);
+  const [errorInput, setErrorInput] = useState(false);
 
   const { stringArray, setStringArray, language, setLanguage } = useTodoStore();
 
@@ -39,6 +41,9 @@ function App() {
   };
 
   const handleInputChange = (event) => {
+    if (event.target.value.trim() !== "") {
+      setErrorInput(false);
+    }
     setTextInput(event.target.value);
   };
 
@@ -49,6 +54,9 @@ function App() {
       setStringArray(newArray);
       localStorage.setItem("todolist", JSON.stringify(newArray));
       setTextInput("");
+      setErrorInput(false);
+    } else {
+      setErrorInput(true);
     }
   };
 
@@ -66,35 +74,43 @@ function App() {
   }, [isChecked, stringArray]);
 
   return (
-    <Container>
-      <Toggle
-        isChecked={language !== "PT"}
-        onChange={toggleLanguage}
-        text="PT-BR"
-        rightText="EN"
+    <>
+      <ErrorSnackBar
+        hasError={errorInput}
+        errorMsg={texts[language].errorInput}
+        show={errorInput}
+        setShow={setErrorInput}
       />
-      <form onSubmit={handleSubmit}>
-        <Title text="To do - Helena | Nick" />
-        <Form
-          placeholder={texts[language].input}
-          btnText={texts[language].button}
-          value={textInput}
-          onChange={handleInputChange}
+      <Container>
+        <Toggle
+          isChecked={language !== "PT"}
+          onChange={toggleLanguage}
+          text="PT-BR"
+          rightText="EN"
         />
-      </form>
-      <Toggle
-        isChecked={isChecked}
-        onChange={handleToggleChange}
-        text={texts[language].toggleComplete}
-      />
+        <form onSubmit={handleSubmit}>
+          <Title text={texts[language].title} />
+          <Form
+            placeholder={texts[language].input}
+            btnText={texts[language].button}
+            value={textInput}
+            onChange={handleInputChange}
+          />
+        </form>
+        <Toggle
+          isChecked={isChecked}
+          onChange={handleToggleChange}
+          text={texts[language].toggleComplete}
+        />
 
-      <ToDoList array={filteredArray} />
-      <Pagination
-        totalItems={stringArray.length}
-        onPageChange={(page) => console.log(`Mudou para a página ${page}`)}
-        currentPage={1}
-      />
-    </Container>
+        <ToDoList array={filteredArray} />
+        <Pagination
+          totalItems={stringArray.length}
+          onPageChange={(page) => console.log(`Mudou para a página ${page}`)}
+          currentPage={1}
+        />
+      </Container>
+    </>
   );
 }
 
